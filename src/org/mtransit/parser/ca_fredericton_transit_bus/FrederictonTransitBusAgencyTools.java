@@ -28,8 +28,10 @@ import org.mtransit.parser.mt.data.MRoute;
 import org.mtransit.parser.mt.data.MTrip;
 import org.mtransit.parser.mt.data.MTripStop;
 
-// http://www.fredericton.ca/en/citygovernment/GoogleTransit.asp
-// http://files.fredericton.ca/data/GISData/google_transit.zip
+// http://www.fredericton.ca/en/open-data
+// http://data.fredericton.ca/en
+// http://data.fredericton.ca/en/dataset/google-transit-feed-specification-dataset
+// http://data.fredericton.ca/sites/default/files/google_transit_2.zip
 public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 
 	public static void main(String[] args) {
