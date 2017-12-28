@@ -81,6 +81,11 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 	}
 
 	@Override
+	public boolean excludeRoute(GRoute gRoute) {
+		return super.excludeRoute(gRoute);
+	}
+
+	@Override
 	public Integer getAgencyRouteType() {
 		return MAgency.ROUTE_TYPE_BUS;
 	}
@@ -185,27 +190,37 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 				MDirectionType.EAST.intValue(), MTrip.HEADSIGN_TYPE_DIRECTION, MDirectionType.EAST.getId(), //
 				MDirectionType.WEST.intValue(), MTrip.HEADSIGN_TYPE_DIRECTION, MDirectionType.WEST.getId()) //
 				.addTripSort(MDirectionType.EAST.intValue(), //
-						Arrays.asList(new String[] { "6028", "1000" })) //
+						Arrays.asList(new String[] { //
+						"6028", //
+								"1000", //
+						})) //
 				.addTripSort(MDirectionType.WEST.intValue(), //
-						Arrays.asList(new String[] { "10001", "6028" })) //
+						Arrays.asList(new String[] { //
+						"10001", //
+								"6028", //
+						})) //
 				.compileBothTripSort());
 		map2.put(20l, new RouteTripSpec(20l, //
 				MDirectionType.EAST.intValue(), MTrip.HEADSIGN_TYPE_DIRECTION, MDirectionType.EAST.getId(), //
 				MDirectionType.WEST.intValue(), MTrip.HEADSIGN_TYPE_DIRECTION, MDirectionType.WEST.getId()) //
 				.addTripSort(MDirectionType.EAST.intValue(), //
-						Arrays.asList(new String[] { "1000", //
+						Arrays.asList(new String[] { //
+						"1000", //
 								"6063", //
 								"6093", "6108", //
 								"6064", "6075", //
 								"6076", //
-								"6078" })) //
+								"6078", //
+						})) //
 				.addTripSort(MDirectionType.WEST.intValue(), //
-						Arrays.asList(new String[] { "6078", //
+						Arrays.asList(new String[] { //
+						"6078", //
 								"6080", //
 								"6107", "6106", //
 								"6081", "6093", //
 								"6094", //
-								"10001" })) //
+								"10001", //
+						})) //
 				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;
 	}
@@ -213,7 +228,7 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public int compareEarly(long routeId, List<MTripStop> list1, List<MTripStop> list2, MTripStop ts1, MTripStop ts2, GStop ts1GStop, GStop ts2GStop) {
 		if (ALL_ROUTE_TRIPS2.containsKey(routeId)) {
-			return ALL_ROUTE_TRIPS2.get(routeId).compare(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop);
+			return ALL_ROUTE_TRIPS2.get(routeId).compare(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop, this);
 		}
 		return super.compareEarly(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop);
 	}
@@ -229,7 +244,7 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public Pair<Long[], Integer[]> splitTripStop(MRoute mRoute, GTrip gTrip, GTripStop gTripStop, ArrayList<MTrip> splitTrips, GSpec routeGTFS) {
 		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
-			return SplitUtils.splitTripStop(mRoute, gTrip, gTripStop, routeGTFS, ALL_ROUTE_TRIPS2.get(mRoute.getId()));
+			return SplitUtils.splitTripStop(mRoute, gTrip, gTripStop, routeGTFS, ALL_ROUTE_TRIPS2.get(mRoute.getId()), this);
 		}
 		return super.splitTripStop(mRoute, gTrip, gTripStop, splitTrips, routeGTFS);
 	}
@@ -249,19 +264,23 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 			mTrip.setHeadsignDirection(MDirectionType.SOUTH);
 			return;
 		}
-		if (mRoute.getId() == 116l) {
-			mTrip.setHeadsignDirection(MDirectionType.NORTH);
-			return;
-		} else if (mRoute.getId() == 216l) {
-			mTrip.setHeadsignDirection(MDirectionType.SOUTH);
-			return;
+		if (isGoodEnoughAccepted()) {
+			if (mRoute.getId() == 116l) {
+				mTrip.setHeadsignDirection(MDirectionType.NORTH);
+				return;
+			} else if (mRoute.getId() == 216l) {
+				mTrip.setHeadsignDirection(MDirectionType.SOUTH);
+				return;
+			}
 		}
-		System.out.printf("\n%s: Unexpected trip %s!\n", mRoute.getId(), gTrip);
-		System.exit(-1);
+		mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), gTrip.getDirectionId() == null ? 0 : gTrip.getDirectionId());
 	}
+
+	private static final Pattern ENDS_WITH_VIA = Pattern.compile("([\\w]?via .*$)", Pattern.CASE_INSENSITIVE);
 
 	@Override
 	public String cleanTripHeadsign(String tripHeadsign) {
+		tripHeadsign = ENDS_WITH_VIA.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
 		tripHeadsign = CleanUtils.removePoints(tripHeadsign);
 		tripHeadsign = CleanUtils.cleanNumbers(tripHeadsign);
 		tripHeadsign = CleanUtils.cleanStreetTypes(tripHeadsign);
