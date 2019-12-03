@@ -1,16 +1,9 @@
 package org.mtransit.parser.ca_fredericton_transit_bus;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.regex.Pattern;
-
 import org.apache.commons.lang3.StringUtils;
 import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.DefaultAgencyTools;
+import org.mtransit.parser.MTLog;
 import org.mtransit.parser.Pair;
 import org.mtransit.parser.SplitUtils;
 import org.mtransit.parser.SplitUtils.RouteTripSpec;
@@ -27,6 +20,14 @@ import org.mtransit.parser.mt.data.MDirectionType;
 import org.mtransit.parser.mt.data.MRoute;
 import org.mtransit.parser.mt.data.MTrip;
 import org.mtransit.parser.mt.data.MTripStop;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.regex.Pattern;
 
 // http://www.fredericton.ca/en/open-data
 // http://data.fredericton.ca/en
@@ -49,11 +50,11 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public void start(String[] args) {
-		System.out.printf("\nGenerating Fredericton Transit bus data...");
+		MTLog.log("Generating Fredericton Transit bus data...");
 		long start = System.currentTimeMillis();
-		this.serviceIds = extractUsefulServiceIds(args, this);
+		this.serviceIds = extractUsefulServiceIds(args, this, true);
 		super.start(args);
-		System.out.printf("\nGenerating Fredericton Transit bus data... DONE in %s.\n", Utils.getPrettyDuration(System.currentTimeMillis() - start));
+		MTLog.log("Generating Fredericton Transit bus data... DONE in %s.", Utils.getPrettyDuration(System.currentTimeMillis() - start));
 	}
 
 	@Override
@@ -108,13 +109,13 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public long getRouteId(GRoute gRoute) {
 		if (RID_11N.equals(gRoute.getRouteId()) && RSN_11.equals(gRoute.getRouteShortName())) {
-			return 10l;
+			return 10L;
 		} else if (RID_13N.equals(gRoute.getRouteId()) && RSN_13.equals(gRoute.getRouteShortName())) {
-			return 12l;
+			return 12L;
 		} else if (RID_15N.equals(gRoute.getRouteId()) && RSN_15.equals(gRoute.getRouteShortName())) {
-			return 14l;
+			return 14L;
 		} else if (RID_16S.equals(gRoute.getRouteId()) && RSN_16.equals(gRoute.getRouteShortName())) {
-			return 17l;
+			return 17L;
 		}
 		return Long.parseLong(gRoute.getRouteShortName()); // use route short name as route ID
 	}
@@ -154,78 +155,72 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 		return AGENCY_COLOR;
 	}
 
-	private static final String COLOR_75923C = "75923C";
-	private static final String COLOR_4169E1 = "4169E1";
-	private static final String COLOR_E60000 = "E60000";
-	private static final String COLOR_32CD32 = "32CD32";
-	private static final String COLOR_996633 = "996633";
-	private static final String COLOR_4B0082 = "4B0082";
-
+	@SuppressWarnings("DuplicateBranchesInSwitch")
 	@Override
 	public String getRouteColor(GRoute gRoute) {
 		if (StringUtils.isEmpty(gRoute.getRouteColor())) {
 			int rid = (int) getRouteId(gRoute);
 			switch (rid) {
 			// @formatter:off
-			case 10: return COLOR_75923C; // Dark Green
-			case 11: return COLOR_75923C; // Dark Green
-			case 12: return COLOR_4169E1; // Blue
-			case 13: return COLOR_4169E1; // Blue
-			case 14: return COLOR_E60000; // Red
-			case 15: return COLOR_E60000; // Red
-			case 16: return COLOR_32CD32; // Green
-			case 17: return COLOR_32CD32; // Green
-			case 18: return COLOR_996633; // Purple
-			case 20: return COLOR_996633; // Purple
-			case 116: return COLOR_4B0082; // Brown
-			case 216: return COLOR_4B0082; // Brown
+			case 10: return "75923C"; // Dark Green
+			case 11: return "75923C"; // Dark Green
+			case 12: return "4169E1"; // Blue
+			case 13: return "4169E1"; // Blue
+			case 14: return "E60000"; // Red
+			case 15: return "E60000"; // Red
+			case 16: return "32CD32"; // Green
+			case 17: return "32CD32"; // Green
+			case 18: return "996633"; // Purple
+			case 20: return "996633"; // Purple
+			case 116: return "4B0082"; // Brown
+			case 216: return "4B0082"; // Brown
 			// @formatter:on
 			}
-			System.out.printf("\nUnexpected route long name for %s!\n", gRoute);
-			System.exit(-1);
+			MTLog.logFatal("Unexpected route long name for %s!", gRoute);
 			return null;
 		}
 		return super.getRouteColor(gRoute);
 	}
 
 	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
+
 	static {
-		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
-		map2.put(18l, new RouteTripSpec(18l, //
+		HashMap<Long, RouteTripSpec> map2 = new HashMap<>();
+		map2.put(18L, new RouteTripSpec(18L, //
 				MDirectionType.EAST.intValue(), MTrip.HEADSIGN_TYPE_DIRECTION, MDirectionType.EAST.getId(), //
 				MDirectionType.WEST.intValue(), MTrip.HEADSIGN_TYPE_DIRECTION, MDirectionType.WEST.getId()) //
 				.addTripSort(MDirectionType.EAST.intValue(), //
-						Arrays.asList(new String[] { //
-						"6028", //
-								"1000", //
-						})) //
-				.addTripSort(MDirectionType.WEST.intValue(), //
-						Arrays.asList(new String[] { //
-						"10001", //
+						Arrays.asList(//
 								"6028", //
-						})) //
+								"1000" //
+						)) //
+				.addTripSort(MDirectionType.WEST.intValue(), //
+						Arrays.asList(//
+								"10001", //
+								"6028" //
+						)) //
 				.compileBothTripSort());
-		map2.put(20l, new RouteTripSpec(20l, //
+		map2.put(20L, new RouteTripSpec(20L, //
 				MDirectionType.EAST.intValue(), MTrip.HEADSIGN_TYPE_DIRECTION, MDirectionType.EAST.getId(), //
 				MDirectionType.WEST.intValue(), MTrip.HEADSIGN_TYPE_DIRECTION, MDirectionType.WEST.getId()) //
 				.addTripSort(MDirectionType.EAST.intValue(), //
-						Arrays.asList(new String[] { //
-						"1000", //
+						Arrays.asList(//
+								"1000", //
 								"6063", //
 								"6093", "6108", //
 								"6064", "6075", //
 								"6076", //
-								"6078", //
-						})) //
+								"6078" //
+						)) //
 				.addTripSort(MDirectionType.WEST.intValue(), //
-						Arrays.asList(new String[] { //
-						"6078", //
+						Arrays.asList(//
+								"6078", //
 								"6080", //
 								"6107", "6106", //
 								"6081", "6093", //
 								"6094", //
-								"10001", //
-						})) //
+								"10001" //
+						)) //
 				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;
 	}
@@ -269,14 +264,12 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 			mTrip.setHeadsignDirection(MDirectionType.SOUTH);
 			return;
 		}
-		if (isGoodEnoughAccepted()) {
-			if (mRoute.getId() == 116l) {
-				mTrip.setHeadsignDirection(MDirectionType.NORTH);
-				return;
-			} else if (mRoute.getId() == 216l) {
-				mTrip.setHeadsignDirection(MDirectionType.SOUTH);
-				return;
-			}
+		if (mRoute.getId() == 116L) {
+			mTrip.setHeadsignDirection(MDirectionType.NORTH);
+			return;
+		} else if (mRoute.getId() == 216L) {
+			mTrip.setHeadsignDirection(MDirectionType.SOUTH);
+			return;
 		}
 		mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), gTrip.getDirectionId() == null ? 0 : gTrip.getDirectionId());
 	}
@@ -292,10 +285,10 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 		return CleanUtils.cleanLabel(tripHeadsign);
 	}
 
-	private static final Pattern AND = Pattern.compile("((^|\\W){1}(and)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
+	private static final Pattern AND = Pattern.compile("((^|\\W)(and)(\\W|$))", Pattern.CASE_INSENSITIVE);
 	private static final String AND_REPLACEMENT = "$2&$4";
 
-	private static final Pattern AT = Pattern.compile("((^|\\W){1}(at)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
+	private static final Pattern AT = Pattern.compile("((^|\\W)(at)(\\W|$))", Pattern.CASE_INSENSITIVE);
 	private static final String AT_REPLACEMENT = "$2/$4";
 
 	@Override
