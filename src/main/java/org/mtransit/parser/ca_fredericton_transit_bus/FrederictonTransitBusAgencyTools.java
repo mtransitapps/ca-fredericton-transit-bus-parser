@@ -186,42 +186,6 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 
 	static {
 		HashMap<Long, RouteTripSpec> map2 = new HashMap<>();
-		map2.put(18L, new RouteTripSpec(18L, //
-				MDirectionType.EAST.intValue(), MTrip.HEADSIGN_TYPE_DIRECTION, MDirectionType.EAST.getId(), //
-				MDirectionType.WEST.intValue(), MTrip.HEADSIGN_TYPE_DIRECTION, MDirectionType.WEST.getId()) //
-				.addTripSort(MDirectionType.EAST.intValue(), //
-						Arrays.asList(//
-								"6028", //
-								"1000" //
-						)) //
-				.addTripSort(MDirectionType.WEST.intValue(), //
-						Arrays.asList(//
-								"10001", //
-								"6028" //
-						)) //
-				.compileBothTripSort());
-		map2.put(20L, new RouteTripSpec(20L, //
-				MDirectionType.EAST.intValue(), MTrip.HEADSIGN_TYPE_DIRECTION, MDirectionType.EAST.getId(), //
-				MDirectionType.WEST.intValue(), MTrip.HEADSIGN_TYPE_DIRECTION, MDirectionType.WEST.getId()) //
-				.addTripSort(MDirectionType.EAST.intValue(), //
-						Arrays.asList(//
-								"1000", //
-								"6063", //
-								"6093", "6108", //
-								"6064", "6075", //
-								"6076", //
-								"6078" //
-						)) //
-				.addTripSort(MDirectionType.WEST.intValue(), //
-						Arrays.asList(//
-								"6078", //
-								"6080", //
-								"6107", "6106", //
-								"6081", "6093", //
-								"6094", //
-								"10001" //
-						)) //
-				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;
 	}
 
@@ -264,7 +228,13 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 			mTrip.setHeadsignDirection(MDirectionType.SOUTH);
 			return;
 		}
-		if (mRoute.getId() == 116L) {
+		if (mRoute.getId() == 18L) {
+			mTrip.setHeadsignDirection(MDirectionType.WEST);
+			return;
+		} else if (mRoute.getId() == 20L) {
+			mTrip.setHeadsignDirection(MDirectionType.EAST);
+			return;
+		} else if (mRoute.getId() == 116L) {
 			mTrip.setHeadsignDirection(MDirectionType.NORTH);
 			return;
 		} else if (mRoute.getId() == 216L) {
@@ -274,11 +244,9 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 		mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), gTrip.getDirectionId() == null ? 0 : gTrip.getDirectionId());
 	}
 
-	private static final Pattern ENDS_WITH_VIA = Pattern.compile("([\\w]?via .*$)", Pattern.CASE_INSENSITIVE);
-
 	@Override
 	public String cleanTripHeadsign(String tripHeadsign) {
-		tripHeadsign = ENDS_WITH_VIA.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
+		tripHeadsign = CleanUtils.removeVia(tripHeadsign);
 		tripHeadsign = CleanUtils.removePoints(tripHeadsign);
 		tripHeadsign = CleanUtils.cleanNumbers(tripHeadsign);
 		tripHeadsign = CleanUtils.cleanStreetTypes(tripHeadsign);
