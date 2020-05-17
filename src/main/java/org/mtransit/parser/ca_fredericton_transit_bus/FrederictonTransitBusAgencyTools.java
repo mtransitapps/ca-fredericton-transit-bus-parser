@@ -22,12 +22,10 @@ import org.mtransit.parser.mt.data.MTrip;
 import org.mtransit.parser.mt.data.MTripStop;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Pattern;
 
 // http://www.fredericton.ca/en/open-data
 // http://data.fredericton.ca/en
@@ -108,13 +106,19 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public long getRouteId(GRoute gRoute) {
-		if (RID_11N.equals(gRoute.getRouteId()) && RSN_11.equals(gRoute.getRouteShortName())) {
+		//noinspection deprecation
+		final String routeId = gRoute.getRouteId();
+		if (RID_11N.equals(routeId)
+				&& RSN_11.equals(gRoute.getRouteShortName())) {
 			return 10L;
-		} else if (RID_13N.equals(gRoute.getRouteId()) && RSN_13.equals(gRoute.getRouteShortName())) {
+		} else if (RID_13N.equals(routeId)
+				&& RSN_13.equals(gRoute.getRouteShortName())) {
 			return 12L;
-		} else if (RID_15N.equals(gRoute.getRouteId()) && RSN_15.equals(gRoute.getRouteShortName())) {
+		} else if (RID_15N.equals(routeId)
+				&& RSN_15.equals(gRoute.getRouteShortName())) {
 			return 14L;
-		} else if (RID_16S.equals(gRoute.getRouteId()) && RSN_16.equals(gRoute.getRouteShortName())) {
+		} else if (RID_16S.equals(routeId)
+				&& RSN_16.equals(gRoute.getRouteShortName())) {
 			return 17L;
 		}
 		return Long.parseLong(gRoute.getRouteShortName()); // use route short name as route ID
@@ -127,21 +131,27 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public String getRouteShortName(GRoute gRoute) {
-		if (RID_11N.equals(gRoute.getRouteId()) && RSN_11.equals(gRoute.getRouteShortName())) {
+		//noinspection deprecation
+		final String routeId = gRoute.getRouteId();
+		if (RID_11N.equals(routeId)
+				&& RSN_11.equals(gRoute.getRouteShortName())) {
 			return _10N_RSN;
-		} else if (RID_13N.equals(gRoute.getRouteId()) && RSN_13.equals(gRoute.getRouteShortName())) {
+		} else if (RID_13N.equals(routeId)
+				&& RSN_13.equals(gRoute.getRouteShortName())) {
 			return _12N_RSN;
-		} else if (RID_15N.equals(gRoute.getRouteId()) && RSN_15.equals(gRoute.getRouteShortName())) {
+		} else if (RID_15N.equals(routeId)
+				&& RSN_15.equals(gRoute.getRouteShortName())) {
 			return _14N_RSN;
-		} else if (RID_16S.equals(gRoute.getRouteId()) && RSN_16.equals(gRoute.getRouteShortName())) {
+		} else if (RID_16S.equals(routeId)
+				&& RSN_16.equals(gRoute.getRouteShortName())) {
 			return _17S_RSN;
 		}
-		return String.valueOf(gRoute.getRouteId()); // use route ID as route short name
+		return routeId; // use route ID as route short name
 	}
 
 	@Override
 	public String getRouteLongName(GRoute gRoute) {
-		String routeLongName = gRoute.getRouteLongName().toLowerCase(Locale.ENGLISH);
+		String routeLongName = gRoute.getRouteLongNameOrDefault().toLowerCase(Locale.ENGLISH);
 		routeLongName = CleanUtils.cleanStreetTypes(routeLongName);
 		return CleanUtils.cleanLabel(routeLongName);
 	}
@@ -185,6 +195,7 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
 
 	static {
+		//noinspection UnnecessaryLocalVariable
 		HashMap<Long, RouteTripSpec> map2 = new HashMap<>();
 		ALL_ROUTE_TRIPS2 = map2;
 	}
@@ -253,16 +264,10 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 		return CleanUtils.cleanLabel(tripHeadsign);
 	}
 
-	private static final Pattern AND = Pattern.compile("((^|\\W)(and)(\\W|$))", Pattern.CASE_INSENSITIVE);
-	private static final String AND_REPLACEMENT = "$2&$4";
-
-	private static final Pattern AT = Pattern.compile("((^|\\W)(at)(\\W|$))", Pattern.CASE_INSENSITIVE);
-	private static final String AT_REPLACEMENT = "$2/$4";
-
 	@Override
 	public String cleanStopName(String gStopName) {
-		gStopName = AND.matcher(gStopName).replaceAll(AND_REPLACEMENT);
-		gStopName = AT.matcher(gStopName).replaceAll(AT_REPLACEMENT);
+		gStopName = CleanUtils.CLEAN_AND.matcher(gStopName).replaceAll(CleanUtils.CLEAN_AND_REPLACEMENT);
+		gStopName = CleanUtils.CLEAN_AT.matcher(gStopName).replaceAll(CleanUtils.CLEAN_AT_REPLACEMENT);
 		gStopName = CleanUtils.cleanSlashes(gStopName);
 		gStopName = CleanUtils.removePoints(gStopName);
 		gStopName = CleanUtils.cleanNumbers(gStopName);
