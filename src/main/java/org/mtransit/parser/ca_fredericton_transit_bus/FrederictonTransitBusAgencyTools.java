@@ -89,66 +89,26 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 		return MAgency.ROUTE_TYPE_BUS;
 	}
 
-	private static final String RSN_11 = "11";
-	private static final String RSN_13 = "13";
-	private static final String RSN_15 = "15";
-	private static final String RSN_16 = "16";
-
-	private static final String RID_11N = "11N";
-	private static final String RID_13N = "13N";
-	private static final String RID_15N = "15N";
-	private static final String RID_16S = "16S";
-
 	@Override
 	public long getRouteId(@NotNull GRoute gRoute) {
-		//noinspection deprecation
-		final String routeId = gRoute.getRouteId();
-		if (RID_11N.equals(routeId)
-				&& RSN_11.equals(gRoute.getRouteShortName())) {
-			return 10L;
-		} else if (RID_13N.equals(routeId)
-				&& RSN_13.equals(gRoute.getRouteShortName())) {
-			return 12L;
-		} else if (RID_15N.equals(routeId)
-				&& RSN_15.equals(gRoute.getRouteShortName())) {
-			return 14L;
-		} else if (RID_16S.equals(routeId)
-				&& RSN_16.equals(gRoute.getRouteShortName())) {
-			return 17L;
+		if (Utils.isDigitsOnly(gRoute.getRouteShortName())) {
+			return Long.parseLong(gRoute.getRouteShortName()); // use route short name as route ID
 		}
-		return Long.parseLong(gRoute.getRouteShortName()); // use route short name as route ID
+		return super.getRouteId(gRoute);
 	}
-
-	private static final String _10N_RSN = "10N";
-	private static final String _12N_RSN = "12N";
-	private static final String _14N_RSN = "14N";
-	private static final String _17S_RSN = "17S";
 
 	@Nullable
 	@Override
 	public String getRouteShortName(@NotNull GRoute gRoute) {
 		//noinspection deprecation
-		final String routeId = gRoute.getRouteId();
-		if (RID_11N.equals(routeId)
-				&& RSN_11.equals(gRoute.getRouteShortName())) {
-			return _10N_RSN;
-		} else if (RID_13N.equals(routeId)
-				&& RSN_13.equals(gRoute.getRouteShortName())) {
-			return _12N_RSN;
-		} else if (RID_15N.equals(routeId)
-				&& RSN_15.equals(gRoute.getRouteShortName())) {
-			return _14N_RSN;
-		} else if (RID_16S.equals(routeId)
-				&& RSN_16.equals(gRoute.getRouteShortName())) {
-			return _17S_RSN;
-		}
-		return routeId; // use route ID as route short name
+		return gRoute.getRouteId(); // use route ID as route short name
 	}
 
 	@NotNull
 	@Override
 	public String getRouteLongName(@NotNull GRoute gRoute) {
-		String routeLongName = gRoute.getRouteLongNameOrDefault().toLowerCase(Locale.ENGLISH);
+		String routeLongName = gRoute.getRouteLongNameOrDefault();
+		routeLongName = routeLongName.toLowerCase(Locale.ENGLISH);
 		routeLongName = CleanUtils.cleanStreetTypes(routeLongName);
 		return CleanUtils.cleanLabel(routeLongName);
 	}
@@ -221,6 +181,16 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 				cleanTripHeadsign(gTrip.getTripHeadsign()),
 				gTrip.getDirectionId() == null ? 0 : gTrip.getDirectionId()
 		);
+	}
+
+	@Override
+	public boolean directionFinderEnabled() {
+		return false; // BECAUSE direction_id NOT provided
+	}
+
+	@Override
+	public boolean mergeHeadsign(@NotNull MTrip mTrip, @NotNull MTrip mTripToMerge) {
+		throw new MTLog.Fatal("%s: Unexpected trips to merges %s & %s!", mTrip.getRouteId(), mTrip, mTripToMerge);
 	}
 
 	@NotNull
