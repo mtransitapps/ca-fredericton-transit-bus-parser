@@ -7,19 +7,13 @@ import org.mtransit.commons.CleanUtils;
 import org.mtransit.commons.StringUtils;
 import org.mtransit.parser.DefaultAgencyTools;
 import org.mtransit.parser.MTLog;
-import org.mtransit.parser.Utils;
-import org.mtransit.parser.gtfs.data.GCalendar;
-import org.mtransit.parser.gtfs.data.GCalendarDate;
 import org.mtransit.parser.gtfs.data.GRoute;
-import org.mtransit.parser.gtfs.data.GSpec;
-import org.mtransit.parser.gtfs.data.GTrip;
 import org.mtransit.parser.mt.data.MAgency;
-import org.mtransit.parser.mt.data.MDirectionType;
-import org.mtransit.parser.mt.data.MRoute;
-import org.mtransit.parser.mt.data.MTrip;
 
-import java.util.HashSet;
 import java.util.Locale;
+import java.util.regex.Pattern;
+
+import static org.mtransit.commons.StringUtils.EMPTY;
 
 // http://www.fredericton.ca/en/open-data
 // http://data.fredericton.ca/en
@@ -27,61 +21,13 @@ import java.util.Locale;
 // http://gtransit.fredericton.ca/google_transit.zip
 public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 
-	public static void main(@Nullable String[] args) {
-		if (args == null || args.length == 0) {
-			args = new String[4];
-			args[0] = "input/gtfs.zip";
-			args[1] = "../../mtransitapps/ca-fredericton-transit-bus-android/res/raw/";
-			args[2] = ""; // files-prefix
-			args[3] = Boolean.TRUE.toString(); // generate schedule from frequencies
-		}
+	public static void main(@NotNull String[] args) {
 		new FrederictonTransitBusAgencyTools().start(args);
 	}
 
-	@Nullable
-	private HashSet<Integer> serviceIdInts;
-
 	@Override
-	public void start(@NotNull String[] args) {
-		MTLog.log("Generating Fredericton Transit bus data...");
-		long start = System.currentTimeMillis();
-		this.serviceIdInts = extractUsefulServiceIdInts(args, this, true);
-		super.start(args);
-		MTLog.log("Generating Fredericton Transit bus data... DONE in %s.", Utils.getPrettyDuration(System.currentTimeMillis() - start));
-	}
-
-	@Override
-	public boolean excludingAll() {
-		return this.serviceIdInts != null && this.serviceIdInts.isEmpty();
-	}
-
-	@Override
-	public boolean excludeCalendar(@NotNull GCalendar gCalendar) {
-		if (this.serviceIdInts != null) {
-			return excludeUselessCalendarInt(gCalendar, this.serviceIdInts);
-		}
-		return super.excludeCalendar(gCalendar);
-	}
-
-	@Override
-	public boolean excludeCalendarDate(@NotNull GCalendarDate gCalendarDates) {
-		if (this.serviceIdInts != null) {
-			return excludeUselessCalendarDateInt(gCalendarDates, this.serviceIdInts);
-		}
-		return super.excludeCalendarDate(gCalendarDates);
-	}
-
-	@Override
-	public boolean excludeTrip(@NotNull GTrip gTrip) {
-		if (this.serviceIdInts != null) {
-			return excludeUselessTripInt(gTrip, this.serviceIdInts);
-		}
-		return super.excludeTrip(gTrip);
-	}
-
-	@Override
-	public boolean excludeRoute(@NotNull GRoute gRoute) {
-		return super.excludeRoute(gRoute);
+	public boolean defaultExcludeEnabled() {
+		return true;
 	}
 
 	@NotNull
@@ -109,7 +55,7 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public String getRouteLongName(@NotNull GRoute gRoute) {
 		String routeLongName = gRoute.getRouteLongNameOrDefault();
-		routeLongName = CleanUtils.toLowerCaseUpperCaseWords(Locale.ENGLISH, routeLongName);
+		routeLongName = CleanUtils.toLowerCaseUpperCaseWords(Locale.ENGLISH, routeLongName, getIgnoredWords());
 		routeLongName = CleanUtils.cleanStreetTypes(routeLongName);
 		return CleanUtils.cleanLabel(routeLongName);
 	}
@@ -151,64 +97,46 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 		return super.getRouteColor(gRoute);
 	}
 
-	private static final String RID_ENDS_WITH_N = "N";
-	private static final String RID_ENDS_WITH_S = "S";
-
-	@Override
-	public void setTripHeadsign(@NotNull MRoute mRoute, @NotNull MTrip mTrip, @NotNull GTrip gTrip, @NotNull GSpec gtfs) {
-		//noinspection deprecation
-		final String routeId = gTrip.getRouteId();
-		if (routeId.endsWith(RID_ENDS_WITH_N)) {
-			mTrip.setHeadsignDirection(MDirectionType.NORTH);
-			return;
-		} else if (routeId.endsWith(RID_ENDS_WITH_S)) {
-			mTrip.setHeadsignDirection(MDirectionType.SOUTH);
-			return;
-		}
-		if (mRoute.getId() == 18L) {
-			mTrip.setHeadsignDirection(MDirectionType.WEST);
-			return;
-		} else if (mRoute.getId() == 20L) {
-			mTrip.setHeadsignDirection(MDirectionType.EAST);
-			return;
-		} else if (mRoute.getId() == 116L) {
-			mTrip.setHeadsignDirection(MDirectionType.NORTH);
-			return;
-		} else if (mRoute.getId() == 216L) {
-			mTrip.setHeadsignDirection(MDirectionType.SOUTH);
-			return;
-		}
-		mTrip.setHeadsignString(
-				cleanTripHeadsign(gTrip.getTripHeadsign()),
-				gTrip.getDirectionId() == null ? 0 : gTrip.getDirectionId()
-		);
-	}
-
 	@Override
 	public boolean directionFinderEnabled() {
-		return false; // BECAUSE direction_id NOT provided
+		return true;
 	}
 
+	private static final Pattern STARTS_W_VIA_ = Pattern.compile("(^via .*$)", Pattern.CASE_INSENSITIVE);
+
+	@NotNull
 	@Override
-	public boolean mergeHeadsign(@NotNull MTrip mTrip, @NotNull MTrip mTripToMerge) {
-		throw new MTLog.Fatal("%s: Unexpected trips to merges %s & %s!", mTrip.getRouteId(), mTrip, mTripToMerge);
+	public String cleanDirectionHeadsign(boolean fromStopName, @NotNull String directionHeadSign) {
+		directionHeadSign = CleanUtils.keepToAndRemoveVia(directionHeadSign);
+		directionHeadSign = STARTS_W_VIA_.matcher(directionHeadSign).replaceAll(EMPTY); // remove trip only containing "via abc"
+		directionHeadSign = super.cleanDirectionHeadsign(fromStopName, directionHeadSign);
+		return directionHeadSign;
 	}
 
 	@NotNull
 	@Override
 	public String cleanTripHeadsign(@NotNull String tripHeadsign) {
-		tripHeadsign = CleanUtils.removeVia(tripHeadsign);
+		tripHeadsign = CleanUtils.keepVia(tripHeadsign, true);
+		tripHeadsign = CleanUtils.cleanBounds(tripHeadsign);
 		tripHeadsign = CleanUtils.cleanNumbers(tripHeadsign);
 		tripHeadsign = CleanUtils.cleanStreetTypes(tripHeadsign);
 		return CleanUtils.cleanLabel(tripHeadsign);
 	}
 
+	private String[] getIgnoredWords() {
+		return new String[]{
+				"DEC", "UNB",
+		};
+	}
+
 	@NotNull
 	@Override
 	public String cleanStopName(@NotNull String gStopName) {
+		gStopName = CleanUtils.toLowerCaseUpperCaseWords(Locale.ENGLISH, gStopName, getIgnoredWords());
 		gStopName = CleanUtils.CLEAN_AND.matcher(gStopName).replaceAll(CleanUtils.CLEAN_AND_REPLACEMENT);
 		gStopName = CleanUtils.CLEAN_AT.matcher(gStopName).replaceAll(CleanUtils.CLEAN_AT_REPLACEMENT);
 		gStopName = CleanUtils.cleanSlashes(gStopName);
+		gStopName = CleanUtils.cleanBounds(gStopName);
 		gStopName = CleanUtils.cleanNumbers(gStopName);
 		gStopName = CleanUtils.cleanStreetTypes(gStopName);
 		return CleanUtils.cleanLabel(gStopName);
