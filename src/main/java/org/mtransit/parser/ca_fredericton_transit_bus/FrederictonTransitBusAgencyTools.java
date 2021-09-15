@@ -45,6 +45,7 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 		return true; // use route short name as route ID
 	}
 
+	@Nullable
 	@Override
 	public String getRouteShortName(@NotNull GRoute gRoute) {
 		//noinspection deprecation
