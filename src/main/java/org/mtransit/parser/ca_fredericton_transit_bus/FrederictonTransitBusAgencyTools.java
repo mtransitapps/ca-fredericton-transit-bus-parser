@@ -5,12 +5,12 @@ import static org.mtransit.commons.StringUtils.EMPTY;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.mtransit.commons.CleanUtils;
-import org.mtransit.commons.StringUtils;
 import org.mtransit.parser.DefaultAgencyTools;
 import org.mtransit.parser.MTLog;
 import org.mtransit.parser.gtfs.data.GRoute;
 import org.mtransit.parser.mt.data.MAgency;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
@@ -22,6 +22,12 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 
 	public static void main(@NotNull String[] args) {
 		new FrederictonTransitBusAgencyTools().start(args);
+	}
+
+	@Nullable
+	@Override
+	public List<Locale> getSupportedLanguages() {
+		return LANG_EN_FR;
 	}
 
 	@Override
@@ -45,17 +51,22 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 		return true; // use route short name as route ID
 	}
 
-	@Nullable
+	@NotNull
 	@Override
 	public String getRouteShortName(@NotNull GRoute gRoute) {
 		//noinspection deprecation
 		return gRoute.getRouteId(); // use route ID as route short name
 	}
 
+	@Override
+	public boolean defaultRouteLongNameEnabled() {
+		return true;
+	}
+
 	@NotNull
 	@Override
 	public String cleanRouteLongName(@NotNull String routeLongName) {
-		routeLongName = CleanUtils.toLowerCaseUpperCaseWords(Locale.ENGLISH, routeLongName, getIgnoredWords());
+		routeLongName = CleanUtils.toLowerCaseUpperCaseWords(getFirstLanguageNN(), routeLongName, getIgnoredWords());
 		routeLongName = CleanUtils.cleanStreetTypes(routeLongName);
 		return CleanUtils.cleanLabel(routeLongName);
 	}
@@ -78,28 +89,24 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 	@SuppressWarnings("DuplicateBranchesInSwitch")
 	@Nullable
 	@Override
-	public String getRouteColor(@NotNull GRoute gRoute, @NotNull MAgency agency) {
-		if (StringUtils.isEmpty(gRoute.getRouteColor())) {
-			int rid = (int) getRouteId(gRoute);
-			switch (rid) {
-			// @formatter:off
-			case 10: return "75923C"; // Dark Green
-			case 11: return "75923C"; // Dark Green
-			case 12: return "4169E1"; // Blue
-			case 13: return "4169E1"; // Blue
-			case 14: return "E60000"; // Red
-			case 15: return "E60000"; // Red
-			case 16: return "32CD32"; // Green
-			case 17: return "32CD32"; // Green
-			case 18: return "996633"; // Purple
-			case 20: return "996633"; // Purple
-			case 116: return "4B0082"; // Brown
-			case 216: return "4B0082"; // Brown
-			// @formatter:on
-			}
-			throw new MTLog.Fatal("Unexpected route long name for %s!", gRoute);
+	public String provideMissingRouteColor(@NotNull GRoute gRoute) {
+		switch (gRoute.getRouteShortName()) {
+		// @formatter:off
+		case "10": return "75923C"; // Dark Green
+		case "11": return "75923C"; // Dark Green
+		case "12": return "4169E1"; // Blue
+		case "13": return "4169E1"; // Blue
+		case "14": return "E60000"; // Red
+		case "15": return "E60000"; // Red
+		case "16": return "32CD32"; // Green
+		case "17": return "32CD32"; // Green
+		case "18": return "996633"; // Purple
+		case "20": return "996633"; // Purple
+		case "116": return "4B0082"; // Brown
+		case "216": return "4B0082"; // Brown
+		// @formatter:on
 		}
-		return super.getRouteColor(gRoute, agency);
+		throw new MTLog.Fatal("Unexpected route color for %s!", gRoute.toStringPlus());
 	}
 
 	@Override
@@ -137,7 +144,7 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 	@NotNull
 	@Override
 	public String cleanStopName(@NotNull String gStopName) {
-		gStopName = CleanUtils.toLowerCaseUpperCaseWords(Locale.ENGLISH, gStopName, getIgnoredWords());
+		gStopName = CleanUtils.toLowerCaseUpperCaseWords(getFirstLanguageNN(), gStopName, getIgnoredWords());
 		gStopName = CleanUtils.CLEAN_AND.matcher(gStopName).replaceAll(CleanUtils.CLEAN_AND_REPLACEMENT);
 		gStopName = CleanUtils.CLEAN_AT.matcher(gStopName).replaceAll(CleanUtils.CLEAN_AT_REPLACEMENT);
 		gStopName = CleanUtils.cleanSlashes(gStopName);
