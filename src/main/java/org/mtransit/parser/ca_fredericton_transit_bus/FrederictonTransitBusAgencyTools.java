@@ -16,8 +16,10 @@ import java.util.regex.Pattern;
 
 // http://www.fredericton.ca/en/open-data
 // http://data.fredericton.ca/en
-// http://data-fredericton.opendata.arcgis.com/datasets/transit-routes--routes-de-transit
+// https://data-fredericton.opendata.arcgis.com/datasets/transit-routes--routes-de-transit
 // http://gtransit.fredericton.ca/google_transit.zip
+// https://data-fredericton.opendata.arcgis.com/datasets/google-transit-gtfs
+// https://www.arcgis.com/sharing/rest/content/items/36704575683245329a1b208bcbc72e72/data
 public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 
 	public static void main(@NotNull String[] args) {
