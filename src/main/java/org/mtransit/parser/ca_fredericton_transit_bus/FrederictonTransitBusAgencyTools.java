@@ -65,6 +65,11 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 		return true;
 	}
 
+	@Override
+	public boolean forceStopTimeFirstNoDropOffLastNoPickupType() {
+		return true; // agency never marks
+	}
+
 	@NotNull
 	@Override
 	public String cleanRouteLongName(@NotNull String routeLongName) {
