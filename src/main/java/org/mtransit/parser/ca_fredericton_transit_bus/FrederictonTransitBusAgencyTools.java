@@ -50,6 +50,15 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 		return true; // use route short name as route ID
 	}
 
+	@Override
+	public @Nullable Long convertRouteIdFromShortNameNotSupported(@NotNull String routeShortName) {
+		switch (routeShortName.toLowerCase(Locale.ROOT)) {
+		case "para":
+			return 10_000L;
+		}
+		return super.convertRouteIdFromShortNameNotSupported(routeShortName);
+	}
+
 	@NotNull
 	@Override
 	public String getRouteShortName(@NotNull GRoute gRoute) {
@@ -92,13 +101,21 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 		switch (gRoute.getRouteShortName()) {
 		// @formatter:off
 		case "10": return "75923C"; // Dark Green
+		case "10N": return "75923C"; // Dark Green
 		case "11": return "75923C"; // Dark Green
+		case "11S": return "75923C"; // Dark Green
 		case "12": return "4169E1"; // Blue
+		case "12N": return "4169E1"; // Blue
 		case "13": return "4169E1"; // Blue
+		case "13S": return "4169E1"; // Blue
 		case "14": return "E60000"; // Red
+		case "14N": return "E60000"; // Red
 		case "15": return "E60000"; // Red
+		case "15S": return "E60000"; // Red
 		case "16": return "32CD32"; // Green
+		case "16N": return "32CD32"; // Green
 		case "17": return "32CD32"; // Green
+		case "17S": return "32CD32"; // Green
 		case "18": return "996633"; // Purple
 		case "20": return "996633"; // Purple
 		case "116": return "4B0082"; // Brown
@@ -117,10 +134,10 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 
 	@NotNull
 	@Override
-	public String cleanDirectionHeadsign(boolean fromStopName, @NotNull String directionHeadSign) {
+	public String cleanDirectionHeadsign(int directionId, boolean fromStopName, @NotNull String directionHeadSign) {
 		directionHeadSign = CleanUtils.keepToAndRemoveVia(directionHeadSign);
 		directionHeadSign = STARTS_W_VIA_.matcher(directionHeadSign).replaceAll(EMPTY); // remove trip only containing "via abc"
-		directionHeadSign = super.cleanDirectionHeadsign(fromStopName, directionHeadSign);
+		directionHeadSign = super.cleanDirectionHeadsign(directionId, fromStopName, directionHeadSign);
 		return directionHeadSign;
 	}
 
