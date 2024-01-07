@@ -59,11 +59,9 @@ public class FrederictonTransitBusAgencyTools extends DefaultAgencyTools {
 		return super.convertRouteIdFromShortNameNotSupported(routeShortName);
 	}
 
-	@NotNull
 	@Override
-	public String getRouteShortName(@NotNull GRoute gRoute) {
-		//noinspection deprecation
-		return gRoute.getRouteId(); // use route ID as route short name
+	public @Nullable String getRouteIdCleanupRegex() {
+		return "-\\d+$";
 	}
 
 	@Override
